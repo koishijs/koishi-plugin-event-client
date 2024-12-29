@@ -2,10 +2,21 @@ import { Context, Schema } from 'koishi'
 
 export const name = 'event-client'
 
-export interface Config {}
+export const inject = ['http']
 
-export const Config: Schema<Config> = Schema.object({})
+export interface Config {
+  baseUrl: string
+}
 
-export function apply(ctx: Context) {
-  // write your plugin here
+export const Config: Schema<Config> = Schema.object({
+  baseUrl: Schema.string().required(),
+})
+
+export function apply(ctx: Context, config: Config) {
+  const socket = ctx.http.ws(config.baseUrl)
+
+  socket.addEventListener('message', (event) => {
+    const { name, args } = JSON.parse(event.data)
+    ctx.emit(name, ...args)
+  })
 }
